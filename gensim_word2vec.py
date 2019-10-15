@@ -17,6 +17,8 @@ import numpy as np
 from gensim.models import Word2Vec
 import glob
 import time
+from gensim.models import KeyedVectors
+from gensim.test.utils import datapath
 
 '''
 
@@ -92,21 +94,25 @@ def remove_punc(sentences):
     
     return new_sentences
 
-# def get_marge_all_text(text_dic):
-# 	total_text=[]
-# 	i=0
-# 	for article in text_dic['text_field']:
-# 		i+=1
-# 		total_text.extend(article)
-# 	print("marge text list : ",i)
+'''
+Now that we have our preprocessed training data, we can start training our model.
 
-
+We will generate embeddings for each word of size 200 and use 5 words in its vicinity to figure out the meaning of the word
+'''
 def word_tokenization(total_text_list):
+
 	body=[article.split('।') for article in total_text_list]
 	body=[item for sublist in body for item in sublist]
 	body=[item.strip() for item in body if len(item.split())>1]
 
 	body=[item.split() for item in body]
+
+	model = Word2Vec(body[:10], size=200, window=5, min_count=1)
+	model_name = "word2vec"
+	# model.save(model_name+".model")
+	model.wv.save_word2vec_format(model_name+'.bin', binary=True)
+	model = KeyedVectors.load_word2vec_format(model_name+'.bin', binary=True)
+	model.save_word2vec_format(model_name+'.txt', binary=True)
 
 	print(body[:10])
 
@@ -117,54 +123,21 @@ if __name__=="__main__":
 			('\n', ' '),
 			('\r', ' ')]
 
-	text_dic={}
-
 	path = glob.glob("NewsArticles/*.json")
-
+	total_text = []
 	print(path)
 	for txt_file in path:
 		extract_text = get_body_text(txt_file,'body')
 		process_text =remove_punc(extract_text)
 		process_text=replace_strings(process_text, replace)
 
-		text_dic['text_field']= process_text
+		total_text.append(process_text)
 
-	# get_marge_all_text(text_dic)
-	with open('file.txt', 'w') as file:
-		file.write(str(text_dic))
+	
+	all_sentence = []
+	for i in total_text:
+		for j in i:
+			all_sentence.append(j)
 
-	# print("data type",len(extract_text))
-
-	# # print("\x1b[31mCrawled Unprocessed Text\x1b[0m")
-	# print(extract_text[30])
-
-
-
-	# ebala_body=remove_punc(extract_text)
-
-	# print("Sentences after removing all punctuations")
-	# print(ebala_body[1])
-
-	# ebala_body=replace_strings(ebala_body, replace)
-
-	# print("Sentences after replacing strings")
-	# print(ebala_body[1])
-
-	# abz_body=get_body_text('NewsArticles/anandabazar_articles.json', 'body')
-
-	# abz_body=remove_punc(abz_body)
-	# abz_body=replace_strings(abz_body, replace)
-
-	# zee_body=get_body_text('NewsArticles/zeenews_articles.json', 'body')
-
-	# zee_body=remove_punc(zee_body)
-	# zee_body=replace_strings(zee_body, replace)
-
-	# body=[]
-	# body.extend(zee_body)
-	# body.extend(abz_body)
-	# body.extend(ebala_body)
-
-	# print(f"Total Number of training data: {len(body)}")
-
-	# word_tokenization(body)
+	print("total train data : ",len(all_sentence))
+	word_tokenization(all_sentence)
