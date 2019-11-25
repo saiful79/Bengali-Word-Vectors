@@ -5,5 +5,5 @@ This project was create for bangla word2vec model generation. it is created by b
 
 # Environment:
 
-- python = 3.6
-1. gensim = 3.7.2 
+1. python = 3.6
+2. gensim = 3.7.2 
